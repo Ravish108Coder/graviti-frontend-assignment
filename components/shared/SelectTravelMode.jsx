@@ -15,7 +15,7 @@ const SelectTravelMode = ({ travelMode, setTravelMode }) => {
             <SelectContent>
                 <SelectItem value="BICYCLING">Bicycling</SelectItem>
                 <SelectItem value="DRIVING">Driving</SelectItem>
-                <SelectItem value="TRANSIT">Transit</SelectItem>
+                {/* <SelectItem value="TRANSIT">Transit</SelectItem> */}
                 <SelectItem value="WALKING">Walking</SelectItem>
             </SelectContent>
         </Select>
