@@ -229,7 +229,7 @@ export default function Home() {
                 <title>Route Planner</title>
             </Head>
 
-            <div className='text-[#1B31A8] text-center'>Let's calculate <strong>distance</strong> from Google maps</div>
+            <div className='text-[#1B31A8] text-center'>Let&apos;s calculate <strong>distance</strong> from Google maps</div>
 
             <div className='w-full flex flex-col-reverse md:flex-row py-4 px-[2%] sm:px-[4%] lg:px-[10%] gap-[3%] sm:gap-[5%] lg:gap-[10%] h-full min-h-[520px]'>
 
