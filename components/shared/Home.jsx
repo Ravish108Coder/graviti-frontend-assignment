@@ -16,6 +16,7 @@ const mapContainerStyle = {
 };
 
 //TODO: add input icons, more map features, zod react-hook-form, and markers and use place multiple values.
+//TODO: add readme and urls and descriptions properly , also bonus points.
 
 // const center = {
 //     lat: -3.745,
