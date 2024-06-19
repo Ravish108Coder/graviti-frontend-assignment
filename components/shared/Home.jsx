@@ -7,7 +7,8 @@ import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 from uuid library
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
-import { CirclePlus } from 'lucide-react';
+import { CirclePlus, Trash } from 'lucide-react';
+import SelectTravelMode from '@/components/shared/SelectTravelMode'
 
 const mapContainerStyle = {
     minHeight: '375px',
@@ -17,6 +18,7 @@ const mapContainerStyle = {
 
 //TODO: add input icons, more map features, zod react-hook-form, and markers and use place multiple values.
 //TODO: add readme and urls and descriptions properly , also bonus points.
+//TODO: some fixes for handleSubmit on unselected inputs of stops (may not be needed to change)
 
 // const center = {
 //     lat: -3.745,
@@ -78,6 +80,8 @@ export default function Home() {
     const destinationRef = useRef(null);
     const waypointRefs = useRef({});
 
+    const [travelMode, setTravelMode] = useState('DRIVING')
+
     const handleLoad = useCallback(map => {
         setMap(map);
     }, []);
@@ -94,7 +98,7 @@ export default function Home() {
                 {
                     origins: [waypointsLocations[i]],
                     destinations: [waypointsLocations[i + 1]],
-                    travelMode: window.google.maps.TravelMode.DRIVING,
+                    travelMode: window.google.maps.TravelMode[travelMode],
                 },
                 (response, status) => {
                     if (status === 'OK') {
@@ -199,7 +203,7 @@ export default function Home() {
                 origin: origin.formatted_address,
                 destination: destination.formatted_address,
                 waypoints: waypointsFormatted,
-                travelMode: window.google.maps.TravelMode.DRIVING
+                travelMode: window.google.maps.TravelMode[travelMode]
             },
             (result, status) => {
                 if (status === window.google.maps.DirectionsStatus.OK) {
@@ -214,6 +218,12 @@ export default function Home() {
         setChangeDistance(false)
         setBlur(false);
     };
+
+    const handlDeleteWaypoint = (id) => {
+        const newWaypoints = waypoints.filter(item => item.id !== id);
+        setWaypoints(newWaypoints);
+        setBlur(true)
+    }
 
     if (loadError) {
         return <div>Error loading maps</div>;
@@ -267,6 +277,11 @@ export default function Home() {
                                         />
 
                                     </Autocomplete>
+                                    {
+                                        waypoints.length>1 && (
+                                            <p onClick={()=>handlDeleteWaypoint(waypoint.id)} className='inline-flex items-center gap-2 cursor-pointer text-sm hover:underline'><Trash size={"16px"}/> Delete</p>
+                                        )
+                                    }
                                 </div>
                             ))}
                             <div className='flex justify-end md:max-w-[250px] lg:max-w-[320px] gap-1 items-center cursor-pointer' onClick={handleAddWaypoint}><CirclePlus size={"18px"} />Add Stop</div>
@@ -275,6 +290,8 @@ export default function Home() {
                             <Autocomplete onLoad={ref => destinationRef.current = ref} onPlaceChanged={() => handlePlaceChanged(destinationRef, setDestination, setDestinationName)}>
                                 <Input type="text" id='destination' className='md:max-w-[250px] lg:max-w-[320px] mt-1 mb-4' placeholder="Destination" value={destinationName || ''} onChange={(e) => setDestinationName(e.target.value)} />
                             </Autocomplete>
+
+                            <SelectTravelMode travelMode={travelMode} setTravelMode={setTravelMode} />
                         </div>
 
                         {/* calculate btn */}
