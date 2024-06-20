@@ -115,7 +115,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you have any questions, feel free to contact:
 
 - Ravish Kumar - [kravish1999@gmail.com](mailto:kravish1999@gmail.com)
-- [Your GitHub](https://github.com/Ravish108Coder)
+- [https://github.com/Ravish108Coder](https://github.com/Ravish108Coder)
 
 ---
 
