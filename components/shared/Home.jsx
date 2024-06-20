@@ -19,6 +19,7 @@ const mapContainerStyle = {
 //TODO: add input icons, more map features, zod react-hook-form, and markers and use place multiple values.
 //TODO: add readme and urls and descriptions properly , also bonus points.
 //TODO: some fixes for handleSubmit on unselected inputs of stops (may not be needed to change)
+//TODO: app icon is not showing in deployment and add share route feature
 
 // const center = {
 //     lat: -3.745,
@@ -31,6 +32,8 @@ export default function Home() {
         lng: 77.2090   // Longitude of New Delhi (fallback)
     };
     const [center, setCenter] = useState(defaultCenter);
+
+    
 
     // Function to fetch current location
     const getCurrentLocation = () => {
@@ -87,15 +90,7 @@ export default function Home() {
         setMap(map);
     }, []);
 
-    useEffect(()=>{
-        if (window.innerWidth < 768) {
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: 'smooth', // This makes the scroll smooth
-            });
-        }
-        setBlur(false);
-    },[distance])
+   
 
     const calculateDistance = (origin, waypointsArray, destination) => {
         const waypointsLocations = [origin, ...waypointsArray.map(w => w.location), destination];
@@ -121,7 +116,8 @@ export default function Home() {
                         completedRequests += 1;
 
                         if (completedRequests === waypointsLocations.length - 1) {
-                            setDistance((totalDistance / 1000).toFixed(2) + ' km');
+                            const validDistance = (totalDistance / 1000).toFixed(2) + ' km'
+                            setDistance(validDistance)
                             setTravelTime(formatDuration(totalDuration));
                             console.log('Total calculated distance:', (totalDistance / 1000).toFixed(2) + ' km');
                             console.log('Total calculated time:', formatDuration(totalDuration));
@@ -140,13 +136,13 @@ export default function Home() {
         return `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
     };
 
-    const handlePlaceChanged = (ref, setter, nameSetter) => {
+    const handlePlaceChanged = (ref, setter, nameSetter, prePlace) => {
         if (ref.current) {
             const place = ref.current.getPlace();
             if (place && place.formatted_address) {
                 setter(place);
                 nameSetter(place.name)
-                setBlur(true)
+                if(place.formatted_address !== prePlace.formatted_address) setBlur(true)
             } else {
                 console.log("No place selected or invalid input");
                 setter(''); // Clear input if no valid place is selected
@@ -159,11 +155,15 @@ export default function Home() {
         if (ref.getPlace().formatted_address.length > 0) {
             const place = ref.getPlace();
             if (place && place.formatted_address) {
+                waypoints.forEach(item => {
+                    if(item.id === id && item.location?.formatted_address != place.formatted_address){
+                        setBlur(true)
+                    }
+                })
                 const updatedWaypoints = waypoints.map(waypoint =>
                     waypoint.id === id ? { ...waypoint, location: place, name: place.name } : waypoint
                 );
                 setWaypoints(updatedWaypoints);
-                setBlur(true)
             } else {
                 console.log(`Place or formatted address for waypoint ${id} is invalid`);
             }
@@ -247,6 +247,53 @@ export default function Home() {
         setBlur(true)
     }
 
+    const generateShareableURL = () => {
+        const originParam = encodeURIComponent(origin.formatted_address);
+        const destinationParam = encodeURIComponent(destination.formatted_address);
+        const waypointsParam = waypoints
+            .filter(waypoint => waypoint.location !== null && waypoint.name === waypoint.location.name)
+            .map(waypoint => encodeURIComponent(waypoint.location.formatted_address))
+            .join('|');
+
+        const currentOrigin = window.location.origin;
+        // const originWithoutSlash = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
+        
+        // console.log(originWithoutSlash);
+            
+        const url = `${currentOrigin}/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}`;
+        return url;
+    };
+
+    useEffect(()=>{
+        if (window.innerWidth < 768) {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth', // This makes the scroll smooth
+            });
+        }
+        setBlur(false);
+    },[distance])
+    
+
+    const handleShare = () => {
+        const shareableURL = generateShareableURL();
+        
+        if (navigator.share) {
+            navigator.share({
+                title: 'My Route',
+                url: shareableURL
+            }).then(() => {
+                console.log('Thanks for sharing!');
+            }).catch(console.error);
+        } else {
+            // Fallback for browsers that do not support the Web Share API
+            navigator.clipboard.writeText(shareableURL).then(() => {
+                alert('Route URL copied to clipboard');
+            }).catch(console.error);
+        }
+    };
+
+
     if (loadError) {
         return <div>Error loading maps</div>;
     }
@@ -274,7 +321,7 @@ export default function Home() {
                         {/* inputs */}
                         <div className='w-full sm:px-0 px-4'>
                             <Label htmlFor="origin">Origin</Label>
-                            <Autocomplete onLoad={ref => originRef.current = ref} onPlaceChanged={() => handlePlaceChanged(originRef, setOrigin, setOriginName)}>
+                            <Autocomplete onLoad={ref => originRef.current = ref} onPlaceChanged={() => handlePlaceChanged(originRef, setOrigin, setOriginName, origin)}>
                                 <Input type="text" id='origin' className='md:max-w-[250px] lg:max-w-[320px] mt-1 mb-4' placeholder="Origin" value={originName || ''} onChange={(e) => setOriginName(e.target.value)} />
                             </Autocomplete>
 
@@ -309,7 +356,7 @@ export default function Home() {
                             <div className='flex justify-end md:max-w-[250px] lg:max-w-[320px] gap-1 items-center cursor-pointer' onClick={handleAddWaypoint}><CirclePlus size={"18px"} />Add Stop</div>
 
                             <Label htmlFor="destination">Destination</Label>
-                            <Autocomplete onLoad={ref => destinationRef.current = ref} onPlaceChanged={() => handlePlaceChanged(destinationRef, setDestination, setDestinationName)}>
+                            <Autocomplete onLoad={ref => destinationRef.current = ref} onPlaceChanged={() => handlePlaceChanged(destinationRef, setDestination, setDestinationName, destination)}>
                                 <Input type="text" id='destination' className='md:max-w-[250px] lg:max-w-[320px] mt-1 mb-4' placeholder="Destination" value={destinationName || ''} onChange={(e) => setDestinationName(e.target.value)} />
                             </Autocomplete>
 
@@ -317,7 +364,7 @@ export default function Home() {
                         </div>
 
                         {/* calculate btn */}
-                        <Button className={`mt-4 md:mt-0 w-[40%] md:w-1/4 bg-[#1B31A8] rounded-2xl hover:bg-[#1b30a8d4]`} onClick={handleSubmit}>Calculate</Button>
+                        <Button disabled={distance !==null && !blur} className={`mt-4 md:mt-0 w-[40%] md:w-1/4 bg-[#1B31A8] rounded-2xl hover:bg-[#1b30a8d4]`} onClick={handleSubmit}>Calculate</Button>
                     </div>
 
                     {/* distance and eta div */}
@@ -340,6 +387,9 @@ export default function Home() {
                             ))) : ("selected place"))}
                             {" "}is <strong className={`${blur && "blur-sm"}`}>{distance}</strong>.
                             The estimated travel time is <strong className={`${blur && "blur-sm"}`}>{travelTime}</strong>.
+                        </div>
+                        <div className={`${blur && "hidden"} w-full flex justify-center items-center`}>
+                            <Button className={`mt-2 mb-6 w-[90%] md:w-[40%] rounded-lg`} onClick={handleShare}>Share Route</Button>
                         </div>
                     </div>
 
