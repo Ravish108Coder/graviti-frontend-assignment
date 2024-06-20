@@ -260,24 +260,33 @@ export default function Home() {
             .map(waypoint => encodeURIComponent(waypoint.location.name))
             .join('|');
 
-        const currentOrigin = window.location.origin;
+        // const currentOrigin = window.location.origin;
         // const originWithoutSlash = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
 
         // console.log(originWithoutSlash);
 
-        const url = `${currentOrigin}/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}&originName=${originName}&destinationName=${destinationName}&waypointsName=${waypointsNameParam}`;
+        // const url = `${currentOrigin}/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}&originName=${originName}&destinationName=${destinationName}&waypointsName=${waypointsNameParam}`;
+        const url = `/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}&originName=${originName}&destinationName=${destinationName}&waypointsName=${waypointsNameParam}`;
         return url;
     };
 
     useEffect(() => {
-        if (window.innerWidth < 768) {
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: 'smooth', // This makes the scroll smooth
-            });
+        if(distance === null) return;
+        console.log('scroller called');
+        // if (window.innerWidth < 768) {
+        if (true) {
+            console.log('scroller called 2');
+    
+            // Ensure the browser has finished rendering
+            setTimeout(() => {
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth', // This makes the scroll smooth
+                });
+            }, 100); // Delay to ensure the DOM has updated
         }
         setBlur(false);
-    }, [distance])
+    }, [distance]);
 
     const [sharableUrl, setSharableUrl] = useState('')
 
@@ -285,25 +294,6 @@ export default function Home() {
         const url = generateShareableURL();
         setSharableUrl(url)
     },[origin, destination, waypoints])
-
-
-    const handleShare = () => {
-        const shareableURL = generateShareableURL();
-
-        if (navigator.share) {
-            navigator.share({
-                title: 'My Route',
-                url: shareableURL
-            }).then(() => {
-                console.log('Thanks for sharing!');
-            }).catch(console.error);
-        } else {
-            // Fallback for browsers that do not support the Web Share API
-            navigator.clipboard.writeText(shareableURL).then(() => {
-                alert('Route URL copied to clipboard');
-            }).catch(console.error);
-        }
-    };
 
 
     if (loadError) {

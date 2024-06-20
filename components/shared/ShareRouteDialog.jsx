@@ -16,18 +16,31 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function ShareRouteDialog({ url }) {
     const [copied, setCopied] = useState(false)
+    const router = useRouter()
+
+    const currentOrigin = window.location.origin;
+    const originWithoutSlash = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(url).then(() => {
+        navigator.clipboard.writeText(originWithoutSlash + url).then(() => {
             console.log('Route URL copied to clipboard');
             setCopied(true)
             setTimeout(() => {
                 setCopied(false)
             }, 800)
         }).catch(console.error);
+    }
+
+    const handleGoToURL = () => {
+        if(false){
+            window.location.href = url
+        }else{
+            router.push(url)
+        }
     }
     return (
         <Dialog>
@@ -48,8 +61,8 @@ export default function ShareRouteDialog({ url }) {
                         </Label>
                         <Input
                             id="link"
-                            value={url}
-                            defaultValue={url || ""}
+                            value={originWithoutSlash + url}
+                            defaultValue={originWithoutSlash + url || ""}
                             readOnly
                         />
                     </div>
@@ -73,8 +86,8 @@ export default function ShareRouteDialog({ url }) {
                             Close
                         </Button>
                     </DialogClose>
-                        <Button type="button" variant="outline" onClick={()=>window.location.href = url}>
-                            Go to Url
+                        <Button type="button" variant="outline" onClick={handleGoToURL}>
+                            Go to url
                         </Button>
                 </DialogFooter>
             </DialogContent>
