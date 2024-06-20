@@ -75,17 +75,11 @@ export default function SharedMap() {
 
     const [originName, setOriginName] = useState('');
     const [destinationName, setDestinationName] = useState('');
-    const [waypoints, setWaypoints] = useState([{ id: uuidv4(), location: null, stopover: true }]); // Initialize with a single waypoint containing a UUID
+    const [waypoints, setWaypoints] = useState(null); // Initialize with a single waypoint containing a UUID
     const [directions, setDirections] = useState(null);
     const [map, setMap] = useState(null);
     const [distance, setDistance] = useState(null)
     const [travelTime, setTravelTime] = useState(null) // State for travel time
-    const [stopsAdded, setStopsAdded] = useState(false)
-    const [blur, setBlur] = useState(false)
-
-    const originRef = useRef(null);
-    const destinationRef = useRef(null);
-    const waypointRefs = useRef({});
 
     const [travelMode, setTravelMode] = useState('DRIVING')
 
@@ -148,7 +142,10 @@ export default function SharedMap() {
 
         const origin = decodeURIComponent(searchParams.get('origin'));
         const destination = decodeURIComponent(searchParams.get('destination'));
+        const currOriginName = decodeURIComponent(searchParams.get('originName'));
+        const currDestinationName = decodeURIComponent(searchParams.get('destinationName'));
         const waypoints = decodeURIComponent(searchParams.get('waypoints'));
+        const waypointsName = decodeURIComponent(searchParams.get('waypointsName'));
         const fetchedTravelMode = decodeURIComponent(searchParams.get('travelMode'));
         if(fetchedTravelMode === "WALKING" || fetchedTravelMode === "DRIVING"){
             setTravelMode(fetchedTravelMode)
@@ -158,12 +155,20 @@ export default function SharedMap() {
             location: address,
             stopover: true,
         }));
+        const waypointsNameList = waypoints.length === 0 ? null : decodeURIComponent(waypointsName).split('|').map(name => ({
+            name: name,
+        }));
+
+        setWaypoints(waypointsNameList)
 
         console.log(origin, destination, waypoints)
 
         if (!origin || !destination) {
             return; // If origin or destination is not provided in the query params, exit early
         }
+
+        setOriginName(currOriginName)
+        setDestinationName(currDestinationName)
 
         if (!isLoaded) return; // Exit early if Google Maps API is not loaded
         const directionsService = new window.google.maps.DirectionsService();
@@ -217,22 +222,22 @@ export default function SharedMap() {
             <div className={`${distance === null && "hidden"} w-[70%] max-w-[600px] flex flex-col gap-2 rounded-2xl shadow-md sm:px-0 px-4`}>
                 <div className='p-4 flex justify-between items-center rounded-t-2xl bg-white'>
                     <span className='text-[#1E2A32] text-[20px]'><span className='capitalize'>{travelMode.toLowerCase()}</span> Distance</span>
-                    <span className={`text-[#0079FF] text-[20px] md:text-[30px] ${blur && "blur-sm"}`}>{distance}</span>
+                    <span className={`text-[#0079FF] text-[20px] md:text-[30px] `}>{distance}</span>
                 </div>
                 <div className='p-4 flex justify-between items-center bg-white'>
                     <span className='text-[#1E2A32] text-[20px]'>ETA</span>
-                    <span className={`text-[#0079FF] text-[20px] md:text-[30px] ${blur && "blur-sm"}`}>{travelTime}</span>
+                    <span className={`text-[#0079FF] text-[20px] md:text-[30px] `}>{travelTime}</span>
                 </div>
                 <div className='text-[#1E2A32] p-4'>
-                    The {travelMode.toLowerCase()} distance between <strong>{origin?.name}</strong> and <strong>{destination?.name + " "}</strong>
-                    via {(stopsAdded ? (waypoints.filter(waypoint => (waypoint.location !== null && waypoint.name === waypoint.location.name)).map((waypoint, index) => (
-                        <span key={waypoint.id}>
+                    The {travelMode.toLowerCase()} distance between <strong>{originName}</strong> and <strong>{destinationName + " "}</strong>
+                    via {(waypoints ? (waypoints.map((waypoint, index) => (
+                        <span key={index}>
                             {index > 0 && ', '}
                             <strong>{waypoint.name}</strong>
                         </span>
                     ))) : ("selected place"))}
-                    {" "}is <strong className={`${blur && "blur-sm"}`}>{distance}</strong>.
-                    The estimated travel time is <strong className={`${blur && "blur-sm"}`}>{travelTime}</strong>.
+                    {" "}is <strong className={``}>{distance}</strong>.
+                    The estimated travel time is <strong className={``}>{travelTime}</strong>.
                 </div>
             </div>
         </div>

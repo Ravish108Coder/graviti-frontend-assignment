@@ -9,6 +9,7 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { CirclePlus, Trash } from 'lucide-react';
 import SelectTravelMode from '@/components/shared/SelectTravelMode'
+import ShareRouteDialog from '@/components/shared/ShareRouteDialog'
 
 const mapContainerStyle = {
     minHeight: '375px',
@@ -254,13 +255,17 @@ export default function Home() {
             .filter(waypoint => waypoint.location !== null && waypoint.name === waypoint.location.name)
             .map(waypoint => encodeURIComponent(waypoint.location.formatted_address))
             .join('|');
+        const waypointsNameParam = waypoints
+            .filter(waypoint => waypoint.location !== null && waypoint.name === waypoint.location.name)
+            .map(waypoint => encodeURIComponent(waypoint.location.name))
+            .join('|');
 
         const currentOrigin = window.location.origin;
         // const originWithoutSlash = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
 
         // console.log(originWithoutSlash);
 
-        const url = `${currentOrigin}/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}`;
+        const url = `${currentOrigin}/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}&originName=${originName}&destinationName=${destinationName}&waypointsName=${waypointsNameParam}`;
         return url;
     };
 
@@ -273,6 +278,13 @@ export default function Home() {
         }
         setBlur(false);
     }, [distance])
+
+    const [sharableUrl, setSharableUrl] = useState('')
+
+    useEffect(()=>{
+        const url = generateShareableURL();
+        setSharableUrl(url)
+    },[origin, destination, waypoints])
 
 
     const handleShare = () => {
@@ -389,7 +401,8 @@ export default function Home() {
                             The estimated travel time is <strong className={`${blur && "blur-sm"}`}>{travelTime}</strong>.
                         </div>
                         <div className={`${blur && "hidden"} w-full flex justify-center items-center`}>
-                            <Button className={`mt-2 mb-6 w-[90%] md:w-[40%] rounded-lg`} onClick={handleShare}>Share Route</Button>
+                            {/* <Button className={`mt-2 mb-6 w-[90%] md:w-[40%] rounded-lg`} onClick={handleShare}>Share Route</Button> */}
+                            <div className={`mt-2 mb-6 w-[90%] md:w-[40%]`} ><ShareRouteDialog url={sharableUrl} /></div>
                         </div>
                     </div>
                     <div className={`${distance !== null && "hidden"} w-[100%] max-w-[600px] flex items-center justify-center gap-2 bg-white rounded-2xl p-4 outline outline-4 outline-offset-4`}>
