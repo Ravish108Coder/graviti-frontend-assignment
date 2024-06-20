@@ -370,7 +370,7 @@ export default function Home() {
                     </div>
 
                     {/* distance and eta div */}
-                    <div className={`${distance === null && "hidden"} w-full flex flex-col gap-2 rounded-2xl shadow-md sm:px-0 px-4`}>
+                    <div className={`${distance === null && "hidden"} sm:w-full flex flex-col gap-2 rounded-2xl shadow-md sm:px-0 w-[90%] mx-auto`}>
                         <div className='p-4 flex justify-between items-center rounded-t-2xl bg-white'>
                             <span className='text-[#1E2A32] text-[20px]'><span className='capitalize'>{travelMode.toLowerCase()}</span> Distance</span>
                             <span className={`text-[#0079FF] text-[20px] md:text-[30px] ${blur && "blur-sm"}`}>{distance}</span>
