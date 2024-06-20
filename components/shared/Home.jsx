@@ -395,7 +395,7 @@ export default function Home() {
                             <div className={`mt-2 mb-6 w-[90%] md:w-[40%]`} ><ShareRouteDialog url={sharableUrl} /></div>
                         </div>
                     </div>
-                    <div className={`${distance !== null && "hidden"} w-[100%] max-w-[600px] flex items-center justify-center gap-2 bg-white rounded-2xl p-4 outline outline-4 outline-offset-4`}>
+                    <div className={`${distance !== null && "hidden"} w-[100%] max-w-[600px] flex items-center justify-center gap-2 bg-[#ffffff59] rounded-2xl p-4 outline outline-[2px] outline-offset-4`}>
                         <p className='text-xl text-left text-blue-900'>Enter Valid Origin, stops and Destination to calculate distance, adding stops are optional.</p>
                     </div>
 
