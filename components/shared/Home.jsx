@@ -293,7 +293,7 @@ export default function Home() {
     useEffect(()=>{
         const url = generateShareableURL();
         setSharableUrl(url)
-    },[origin, destination, waypoints])
+    },[origin, destination, waypoints, travelMode])
 
 
     if (loadError) {
