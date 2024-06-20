@@ -13,7 +13,7 @@ const SelectTravelMode = ({ travelMode, setTravelMode }) => {
                 <SelectValue placeholder="Travel Mode" />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="BICYCLING">Bicycling</SelectItem>
+                {/* <SelectItem value="BICYCLING">Bicycling</SelectItem> */}
                 <SelectItem value="DRIVING">Driving</SelectItem>
                 {/* <SelectItem value="TRANSIT">Transit</SelectItem> */}
                 <SelectItem value="WALKING">Walking</SelectItem>
