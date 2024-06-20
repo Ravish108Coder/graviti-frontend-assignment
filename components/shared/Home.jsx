@@ -33,7 +33,7 @@ export default function Home() {
     };
     const [center, setCenter] = useState(defaultCenter);
 
-    
+
 
     // Function to fetch current location
     const getCurrentLocation = () => {
@@ -90,7 +90,7 @@ export default function Home() {
         setMap(map);
     }, []);
 
-   
+
 
     const calculateDistance = (origin, waypointsArray, destination) => {
         const waypointsLocations = [origin, ...waypointsArray.map(w => w.location), destination];
@@ -142,7 +142,7 @@ export default function Home() {
             if (place && place.formatted_address) {
                 setter(place);
                 nameSetter(place.name)
-                if(place.formatted_address !== prePlace.formatted_address) setBlur(true)
+                if (place.formatted_address !== prePlace.formatted_address) setBlur(true)
             } else {
                 console.log("No place selected or invalid input");
                 setter(''); // Clear input if no valid place is selected
@@ -156,7 +156,7 @@ export default function Home() {
             const place = ref.getPlace();
             if (place && place.formatted_address) {
                 waypoints.forEach(item => {
-                    if(item.id === id && item.location?.formatted_address != place.formatted_address){
+                    if (item.id === id && item.location?.formatted_address != place.formatted_address) {
                         setBlur(true)
                     }
                 })
@@ -193,7 +193,7 @@ export default function Home() {
             alert("Origin and Destination must be selected not manually typed");
             return;
         }
-    
+
         // Check if any stops are the same as the origin or destination
         for (let waypoint of waypoints) {
             if (waypoint.location && waypoint.name === waypoint.location.name) {
@@ -204,7 +204,7 @@ export default function Home() {
                 }
             }
         }
-    
+
         console.log(waypoints)
         waypoints.forEach(item => console.log(item.location?.formatted_address, item.location?.name))
         const waypointsList = waypoints.filter(waypoint => (waypoint.location !== null && waypoint.name === waypoint.location.name)) || [];
@@ -213,11 +213,11 @@ export default function Home() {
             location: waypoint.location.formatted_address,
             stopover: waypoint.stopover,
         }));
-    
+
         if (waypointsFormatted.length > 0) {
             setStopsAdded(true)
         }
-    
+
         const directionsService = new window.google.maps.DirectionsService();
         directionsService.route(
             {
@@ -239,7 +239,7 @@ export default function Home() {
         setChangeDistance(false)
         // setBlur(false);
     };
-    
+
 
     const handlDeleteWaypoint = (id) => {
         const newWaypoints = waypoints.filter(item => item.id !== id);
@@ -257,14 +257,14 @@ export default function Home() {
 
         const currentOrigin = window.location.origin;
         // const originWithoutSlash = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
-        
+
         // console.log(originWithoutSlash);
-            
+
         const url = `${currentOrigin}/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}`;
         return url;
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         if (window.innerWidth < 768) {
             window.scrollTo({
                 top: document.body.scrollHeight,
@@ -272,12 +272,12 @@ export default function Home() {
             });
         }
         setBlur(false);
-    },[distance])
-    
+    }, [distance])
+
 
     const handleShare = () => {
         const shareableURL = generateShareableURL();
-        
+
         if (navigator.share) {
             navigator.share({
                 title: 'My Route',
@@ -364,7 +364,7 @@ export default function Home() {
                         </div>
 
                         {/* calculate btn */}
-                        <Button disabled={distance !==null && !blur} className={`mt-4 md:mt-0 w-[40%] md:w-1/4 bg-[#1B31A8] rounded-2xl hover:bg-[#1b30a8d4]`} onClick={handleSubmit}>Calculate</Button>
+                        <Button disabled={distance !== null && !blur} className={`mt-4 md:mt-0 w-[40%] md:w-1/4 bg-[#1B31A8] rounded-2xl hover:bg-[#1b30a8d4]`} onClick={handleSubmit}>Calculate</Button>
                     </div>
 
                     {/* distance and eta div */}
@@ -391,6 +391,9 @@ export default function Home() {
                         <div className={`${blur && "hidden"} w-full flex justify-center items-center`}>
                             <Button className={`mt-2 mb-6 w-[90%] md:w-[40%] rounded-lg`} onClick={handleShare}>Share Route</Button>
                         </div>
+                    </div>
+                    <div className={`${distance !== null && "hidden"} w-[100%] max-w-[600px] flex items-center justify-center gap-2 bg-white rounded-2xl p-4 outline outline-4 outline-offset-4`}>
+                        <p className='text-xl text-left text-blue-900'>Enter Valid Origin, stops and Destination to calculate distance, adding stops are optional.</p>
                     </div>
 
                 </div>
