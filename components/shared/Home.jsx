@@ -108,6 +108,12 @@ export default function Home() {
 
                         if (completedRequests === waypointsLocations.length - 1) {
                             setDistance((totalDistance / 1000).toFixed(2) + ' km');
+                            if (window.innerWidth < 768) {
+                                window.scrollTo({
+                                    top: document.body.scrollHeight,
+                                    behavior: 'smooth', // This makes the scroll smooth
+                                });
+                            }
                             console.log('Total calculated distance:', (totalDistance / 1000).toFixed(2) + ' km');
                         }
                     } else {
