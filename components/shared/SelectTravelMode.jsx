@@ -6,9 +6,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-const SelectTravelMode = ({ travelMode, setTravelMode }) => {
+const SelectTravelMode = ({ travelMode, setTravelMode, setBlur }) => {
     return (
-        <Select value={travelMode} onValueChange={(value) => setTravelMode(value)}>
+        <Select value={travelMode} onValueChange={(value) => {
+                setTravelMode(value)
+                setBlur(true)
+            }
+        }>
             <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Travel Mode" />
             </SelectTrigger>

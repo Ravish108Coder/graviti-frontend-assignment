@@ -2,7 +2,7 @@
 
 import Head from 'next/head';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { GoogleMap, DirectionsRenderer, Autocomplete, useJsApiLoader, DistanceMatrixService } from '@react-google-maps/api';
+import { GoogleMap, DirectionsRenderer, Autocomplete, useJsApiLoader } from '@react-google-maps/api';
 import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 from uuid library
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -29,7 +29,7 @@ export default function Home() {
     const defaultCenter = {
         lat: 28.6139,  // Latitude of New Delhi (fallback)
         lng: 77.2090   // Longitude of New Delhi (fallback)
-      };
+    };
     const [center, setCenter] = useState(defaultCenter);
 
     // Function to fetch current location
@@ -73,6 +73,7 @@ export default function Home() {
     const [directions, setDirections] = useState(null);
     const [map, setMap] = useState(null);
     const [distance, setDistance] = useState(null)
+    const [travelTime, setTravelTime] = useState(null) // State for travel time
     const [stopsAdded, setStopsAdded] = useState(false)
     const [blur, setBlur] = useState(false)
 
@@ -86,11 +87,22 @@ export default function Home() {
         setMap(map);
     }, []);
 
+    useEffect(()=>{
+        if (window.innerWidth < 768) {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth', // This makes the scroll smooth
+            });
+        }
+        setBlur(false);
+    },[distance])
+
     const calculateDistance = (origin, waypointsArray, destination) => {
         const waypointsLocations = [origin, ...waypointsArray.map(w => w.location), destination];
 
         const distanceService = new window.google.maps.DistanceMatrixService();
         let totalDistance = 0;
+        let totalDuration = 0;
         let completedRequests = 0;
 
         for (let i = 0; i < waypointsLocations.length - 1; i++) {
@@ -103,18 +115,16 @@ export default function Home() {
                 (response, status) => {
                     if (status === 'OK') {
                         const distance = response.rows[0].elements[0].distance.value;
+                        const duration = response.rows[0].elements[0].duration.value; // Duration in seconds
                         totalDistance += distance;
+                        totalDuration += duration;
                         completedRequests += 1;
 
                         if (completedRequests === waypointsLocations.length - 1) {
                             setDistance((totalDistance / 1000).toFixed(2) + ' km');
-                            if (window.innerWidth < 768) {
-                                window.scrollTo({
-                                    top: document.body.scrollHeight,
-                                    behavior: 'smooth', // This makes the scroll smooth
-                                });
-                            }
+                            setTravelTime(formatDuration(totalDuration));
                             console.log('Total calculated distance:', (totalDistance / 1000).toFixed(2) + ' km');
+                            console.log('Total calculated time:', formatDuration(totalDuration));
                         }
                     } else {
                         console.error(`Error fetching distance ${status}`, response);
@@ -124,21 +134,17 @@ export default function Home() {
         }
     };
 
-    // useEffect(() => {
-    //     setBlur(true)
-    // }, [originName, destinationName, waypoints.length])
-
-
-
+    const formatDuration = (duration) => {
+        const hours = Math.floor(duration / 3600);
+        const minutes = Math.floor((duration % 3600) / 60);
+        return `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
+    };
 
     const handlePlaceChanged = (ref, setter, nameSetter) => {
         if (ref.current) {
-            // console.log(ref.current.getPlace())
             const place = ref.current.getPlace();
             if (place && place.formatted_address) {
-                // console.log("Selected place:", place.formatted_address);
                 setter(place);
-                // setter(place.formatted_address);
                 nameSetter(place.name)
                 setBlur(true)
             } else {
@@ -151,11 +157,9 @@ export default function Home() {
     const handleWaypointChange = (id) => {
         const ref = waypointRefs.current[id];
         if (ref.getPlace().formatted_address.length > 0) {
-            // console.log(ref)
             const place = ref.getPlace();
             if (place && place.formatted_address) {
                 const updatedWaypoints = waypoints.map(waypoint =>
-                    // waypoint.id === id ? { ...waypoint, location: place.formatted_address, name: place.name } : waypoint
                     waypoint.id === id ? { ...waypoint, location: place, name: place.name } : waypoint
                 );
                 setWaypoints(updatedWaypoints);
@@ -169,12 +173,11 @@ export default function Home() {
     };
 
     const handleAddWaypoint = () => {
-        const flag = waypoints.find(item=>item.location===null || item.name==='')
-        // if(waypoints[waypoints.length-1].location===null){
-        if(flag!==undefined){
+        const flag = waypoints.find(item => item.location === null || item.name === '')
+        if (flag !== undefined) {
             alert('Fill the empty stop slot to add more stops if not filled.\nOnly selected inputs are valid, if there are unselected inputs.')
             return;
-        } 
+        }
         const newWaypoint = { id: uuidv4(), location: null, name: '', stopover: true };
         setWaypoints([...waypoints, newWaypoint]);
     };
@@ -185,24 +188,36 @@ export default function Home() {
             alert("Origin and Destination must be selected.");
             return;
         }
-        if(origin.name !== originName || destination.name !== destinationName){
+        if (origin.name !== originName || destination.name !== destinationName) {
             console.error("Inputs must be selected not manually typed");
             alert("Origin and Destination must be selected not manually typed");
             return;
         }
+    
+        // Check if any stops are the same as the origin or destination
+        for (let waypoint of waypoints) {
+            if (waypoint.location && waypoint.name === waypoint.location.name) {
+                if (waypoint.location.formatted_address === origin.formatted_address || waypoint.location.formatted_address === destination.formatted_address) {
+                    console.error("Stops cannot be the same as the origin or destination.");
+                    alert("Stops cannot be the same as the origin or destination.");
+                    return;
+                }
+            }
+        }
+    
         console.log(waypoints)
-        waypoints.forEach(item=>console.log(item.location?.formatted_address, item.location?.name))
+        waypoints.forEach(item => console.log(item.location?.formatted_address, item.location?.name))
         const waypointsList = waypoints.filter(waypoint => (waypoint.location !== null && waypoint.name === waypoint.location.name)) || [];
         console.log(waypointsList)
         const waypointsFormatted = waypointsList.map(waypoint => ({
             location: waypoint.location.formatted_address,
             stopover: waypoint.stopover,
         }));
-
+    
         if (waypointsFormatted.length > 0) {
             setStopsAdded(true)
         }
-
+    
         const directionsService = new window.google.maps.DirectionsService();
         directionsService.route(
             {
@@ -222,8 +237,9 @@ export default function Home() {
             }
         );
         setChangeDistance(false)
-        setBlur(false);
+        // setBlur(false);
     };
+    
 
     const handlDeleteWaypoint = (id) => {
         const newWaypoints = waypoints.filter(item => item.id !== id);
@@ -245,7 +261,7 @@ export default function Home() {
                 <title>Route Planner</title>
             </Head>
 
-            <div className='text-[#1B31A8] text-center'>Let&apos;s calculate <strong>distance</strong> from Google maps</div>
+            <div className='text-[#1B31A8] text-center'>Let&apos;s calculate <strong>distance</strong> and <strong>ETA</strong> from Google maps</div>
 
             <div className='w-full flex flex-col-reverse md:flex-row py-4 px-[2%] sm:px-[4%] lg:px-[10%] gap-[3%] sm:gap-[5%] lg:gap-[10%] h-full min-h-[520px]'>
 
@@ -284,8 +300,8 @@ export default function Home() {
 
                                     </Autocomplete>
                                     {
-                                        waypoints.length>1 && (
-                                            <p onClick={()=>handlDeleteWaypoint(waypoint.id)} className='inline-flex items-center gap-2 cursor-pointer text-sm hover:underline'><Trash size={"16px"}/> Delete</p>
+                                        waypoints.length > 1 && (
+                                            <p onClick={() => handlDeleteWaypoint(waypoint.id)} className='inline-flex items-center gap-2 cursor-pointer text-sm hover:underline'><Trash size={"16px"} /> Delete</p>
                                         )
                                     }
                                 </div>
@@ -297,21 +313,25 @@ export default function Home() {
                                 <Input type="text" id='destination' className='md:max-w-[250px] lg:max-w-[320px] mt-1 mb-4' placeholder="Destination" value={destinationName || ''} onChange={(e) => setDestinationName(e.target.value)} />
                             </Autocomplete>
 
-                            <SelectTravelMode travelMode={travelMode} setTravelMode={setTravelMode} />
+                            <SelectTravelMode travelMode={travelMode} setTravelMode={setTravelMode} setBlur={setBlur} />
                         </div>
 
                         {/* calculate btn */}
                         <Button className={`mt-4 md:mt-0 w-[40%] md:w-1/4 bg-[#1B31A8] rounded-2xl hover:bg-[#1b30a8d4]`} onClick={handleSubmit}>Calculate</Button>
                     </div>
 
-                    {/* distance div */}
+                    {/* distance and eta div */}
                     <div className={`${distance === null && "hidden"} w-full flex flex-col gap-2 rounded-2xl shadow-md sm:px-0 px-4`}>
                         <div className='p-4 flex justify-between items-center rounded-t-2xl bg-white'>
-                            <span className='text-[#1E2A32] text-[20px]'>Distance</span>
-                            <span className={`text-[#0079FF] text-[30px] ${blur && "blur-sm"}`}>{distance}</span>
+                            <span className='text-[#1E2A32] text-[20px]'><span className='capitalize'>{travelMode.toLowerCase()}</span> Distance</span>
+                            <span className={`text-[#0079FF] text-[20px] md:text-[30px] ${blur && "blur-sm"}`}>{distance}</span>
+                        </div>
+                        <div className='p-4 flex justify-between items-center bg-white'>
+                            <span className='text-[#1E2A32] text-[20px]'>ETA</span>
+                            <span className={`text-[#0079FF] text-[20px] md:text-[30px] ${blur && "blur-sm"}`}>{travelTime}</span>
                         </div>
                         <div className='text-[#1E2A32] p-4'>
-                            The distance between <strong>{origin?.name}</strong> and <strong>{destination?.name + " "}</strong>
+                            The {travelMode.toLowerCase()} distance between <strong>{origin?.name}</strong> and <strong>{destination?.name + " "}</strong>
                             via {changeDistance && (stopsAdded ? (waypoints.filter(waypoint => (waypoint.location !== null && waypoint.name === waypoint.location.name)).map((waypoint, index) => (
                                 <span key={waypoint.id}>
                                     {index > 0 && ', '}
@@ -319,6 +339,7 @@ export default function Home() {
                                 </span>
                             ))) : ("selected place"))}
                             {" "}is <strong className={`${blur && "blur-sm"}`}>{distance}</strong>.
+                            The estimated travel time is <strong className={`${blur && "blur-sm"}`}>{travelTime}</strong>.
                         </div>
                     </div>
 
