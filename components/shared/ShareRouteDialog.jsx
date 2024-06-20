@@ -39,7 +39,8 @@ export default function ShareRouteDialog({ url }) {
         if(false){
             window.location.href = url
         }else{
-            router.push(url)
+            // router.push(url)
+            window.open(originWithoutSlash + url, '_blank'); // '_blank' opens the URL in a new tab
         }
     }
     return (
