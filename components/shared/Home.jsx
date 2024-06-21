@@ -174,8 +174,8 @@ export default function Home() {
                     lat: place.geometry.location.lat(),
                     lng: place.geometry.location.lng()
                 }
-                
-                if (place.formatted_address !== prePlace.formatted_address){
+
+                if (place.formatted_address !== prePlace.formatted_address) {
                     setCenter(currCenter)
                     setBlur(true)
                 }
@@ -199,6 +199,7 @@ export default function Home() {
                             lng: place.geometry.location.lng()
                         }
                         setCenter(currCenter)
+                        setStopsAdded(true)
                     }
                 })
                 const updatedWaypoints = waypoints.map(waypoint =>
@@ -255,10 +256,6 @@ export default function Home() {
             stopover: waypoint.stopover,
         }));
 
-        if (waypointsFormatted.length > 0) {
-            setStopsAdded(true)
-        }
-
         const directionsService = new window.google.maps.DirectionsService();
         directionsService.route(
             {
@@ -300,12 +297,6 @@ export default function Home() {
             .map(waypoint => encodeURIComponent(waypoint.location.name))
             .join('|');
 
-        // const currentOrigin = window.location.origin;
-        // const originWithoutSlash = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
-
-        // console.log(originWithoutSlash);
-
-        // const url = `${currentOrigin}/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}&originName=${originName}&destinationName=${destinationName}&waypointsName=${waypointsNameParam}`;
         const url = `/route?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&travelMode=${travelMode}&originName=${originName}&destinationName=${destinationName}&waypointsName=${waypointsNameParam}`;
         return url;
     };
@@ -413,7 +404,6 @@ export default function Home() {
         }
     }
 
-
     if (loadError) {
         return <div>Error loading maps</div>;
     }
@@ -467,8 +457,14 @@ export default function Home() {
 
                                     </Autocomplete>
                                     {
-                                        waypoints.length > 1 && (
+                                        waypoints.length > 1 ? (
                                             <p onClick={() => handlDeleteWaypoint(waypoint.id)} className='inline-flex items-center gap-2 cursor-pointer text-sm hover:underline'><Trash size={"16px"} /> Delete</p>
+                                        ) : (
+                                            <p onClick={() => {
+                                                setWaypoints(prev=>[{ id: uuidv4(), location: null, stopover: true }])
+                                                setStopsAdded(false)
+                                                setBlur(true)
+                                            } } className={`${!stopsAdded && 'hidden'} flex items-center gap-2 cursor-pointer text-sm hover:underline pl-2 -mt-1`}>Remove</p>
                                         )
                                     }
                                 </div>
@@ -484,7 +480,7 @@ export default function Home() {
                         </div>
 
                         {/* calculate btn */}
-                        <Button disabled={distance !== null && !blur} className={`mt-4 md:mt-0 w-[40%] md:w-1/4 bg-[#1B31A8] rounded-2xl hover:bg-[#1b30a8d4]`} onClick={handleSubmit}>Calculate</Button>
+                        <Button disabled={distance!==null && !blur} className={`mt-4 md:mt-0 w-[40%] md:w-1/4 bg-[#1B31A8] rounded-2xl hover:bg-[#1b30a8d4]`} onClick={handleSubmit}>Calculate</Button>
                     </div>
 
                     {/* distance and eta div */}
@@ -528,7 +524,6 @@ export default function Home() {
                         center={center}
                         zoom={10}
                         onLoad={handleLoad}
-                        options={options}
                     >
                         {directions && (
                             <DirectionsRenderer
@@ -582,12 +577,13 @@ export default function Home() {
                     </GoogleMap>
                     {
                         directions &&
-                        <div className="flex items-center space-x-2 bg-white opacity-95 absolute justify-center top-2 left-[50%] transform -translate-x-1/2 p-2 shadow-md rounded-lg">
+                        <div className="flex items-center space-x-2 bg-white opacity-95 absolute justify-center top-[60px] left-[26px] sm:left-[12px] p-2 px-4 shadow-md rounded-lg">
                             <Switch id="airplane-mode" checked={showSteps}
                                 onCheckedChange={() => {
                                     showSteps && setSelectedMarker(null)
-                                    setShowSteps(!showSteps)}
-                                    }/>
+                                    setShowSteps(!showSteps)
+                                }
+                                } />
                             <Label htmlFor="airplane-mode" className='text-sm'>Show Steps</Label>
                         </div>
                     }
