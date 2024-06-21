@@ -12,12 +12,7 @@ import SelectTravelMode from '@/components/shared/SelectTravelMode'
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation'
 
-const mapContainerStyle = {
-    minHeight: '375px',
-    width: '70%',
-    // maxHeight: '511px'
-    maxHeight: '711px'
-};
+
 
 //TODO: add input icons, more map features, zod react-hook-form, and markers and use place multiple values.
 //TODO: add readme and urls and descriptions properly , also bonus points.
@@ -30,37 +25,36 @@ const mapContainerStyle = {
 // };
 
 export default function SharedMap() {
+    const [isMobile, setIsMobile] = useState(false)
+    // const isMobile = (window.innerWidth < 768);
+    const mapContainerStyle = {
+        minHeight: '475px',
+        width: isMobile ? "90%" : "70%", // Adjusted to use ternary operator correctly
+        maxHeight: '711px'
+    };
+
     const defaultCenter = {
         lat: 28.6139,  // Latitude of New Delhi (fallback)
         lng: 77.2090   // Longitude of New Delhi (fallback)
     };
     const [center, setCenter] = useState(defaultCenter);
 
-
-
-    // Function to fetch current location
-    const getCurrentLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setCenter({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    });
-                },
-                (error) => {
-                    console.error("Error getting current location:", error);
-                }
-            );
-        } else {
-            console.error("Geolocation is not supported by this browser.");
-        }
-    };
-
-    // Call getCurrentLocation when component mounts to get current location
     useEffect(() => {
-        getCurrentLocation();
-    }, []);
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 855);
+        };
+    
+        // Initial check
+        setIsMobile(window.innerWidth < 855);
+    
+        // Listen for window resize events
+        window.addEventListener('resize', handleResize);
+    
+        // Clean up event listener on component unmount
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [setIsMobile]); // Only include setIsMobile in the dependency array
 
     const [libraries] = useState(['places']);
 
@@ -147,7 +141,7 @@ export default function SharedMap() {
         const waypoints = decodeURIComponent(searchParams.get('waypoints'));
         const waypointsName = decodeURIComponent(searchParams.get('waypointsName'));
         const fetchedTravelMode = decodeURIComponent(searchParams.get('travelMode'));
-        if(fetchedTravelMode === "WALKING" || fetchedTravelMode === "DRIVING"){
+        if (fetchedTravelMode === "WALKING" || fetchedTravelMode === "DRIVING") {
             setTravelMode(fetchedTravelMode)
         }
         // const waypoints = (searchParams.get('waypoints'));
@@ -202,7 +196,7 @@ export default function SharedMap() {
     }
 
     return (
-        <div className='w-full pt-4 flex flex-col gap-20 justify-center bg-slate-200 h-screen items-center'>
+        <div className='w-full pt-4 flex flex-col gap-10 justify-center bg-slate-200 h-screen items-center'>
 
             {/* google map */}
             <GoogleMap

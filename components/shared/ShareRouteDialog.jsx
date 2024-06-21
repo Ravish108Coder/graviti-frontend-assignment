@@ -62,7 +62,7 @@ export default function ShareRouteDialog({ url }) {
                         </Label>
                         <Input
                             id="link"
-                            value={originWithoutSlash + url}
+                            value={originWithoutSlash + url || ""}
                             defaultValue={originWithoutSlash + url || ""}
                             readOnly
                         />
@@ -81,13 +81,13 @@ export default function ShareRouteDialog({ url }) {
                         )}
                     </Button>
                 </div>
-                <DialogFooter className="sm:justify-start">
+                <DialogFooter className="justify-start">
                     <DialogClose asChild>
                         <Button type="button" variant="destructive">
                             Close
                         </Button>
                     </DialogClose>
-                        <Button type="button" variant="outline" onClick={handleGoToURL}>
+                        <Button className="mb-4" type="button" variant="outline" onClick={handleGoToURL}>
                             Go to url
                         </Button>
                 </DialogFooter>

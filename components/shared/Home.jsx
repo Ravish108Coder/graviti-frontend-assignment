@@ -12,15 +12,16 @@ import SelectTravelMode from '@/components/shared/SelectTravelMode'
 import ShareRouteDialog from '@/components/shared/ShareRouteDialog'
 
 const mapContainerStyle = {
-    minHeight: '375px',
+    minHeight: '100%',
     width: '100%',
-    maxHeight: '511px'
+    // maxHeight: '511px'
 };
 
 //TODO: add input icons, more map features, zod react-hook-form, and markers and use place multiple values.
 //TODO: add readme and urls and descriptions properly , also bonus points.
 //TODO: some fixes for handleSubmit on unselected inputs of stops (may not be needed to change)
 //TODO: app icon is not showing in deployment and add share route feature
+//TODO: add demo link
 
 // const center = {
 //     lat: -3.745,
@@ -395,8 +396,10 @@ export default function Home() {
                             <div className={`mt-2 mb-6 w-[90%] md:w-[40%]`} ><ShareRouteDialog url={sharableUrl} /></div>
                         </div>
                     </div>
-                    <div className={`${distance !== null && "hidden"} w-[100%] max-w-[600px] flex items-center justify-center gap-2 bg-[#ffffff59] rounded-2xl p-4 outline outline-[2px] outline-offset-4`}>
+                    <div className={`${distance !== null && "hidden"} w-full flex justify-center items-center px-4 md:justify-start md:px-0`}>
+                    <div className={` w-[100%] max-w-[600px] flex items-center justify-center gap-2 bg-[#ffffff59] rounded-2xl p-4 outline outline-[2px] outline-offset-4`}>
                         <p className='text-xl text-left text-blue-900'>Enter Valid Origin, stops and Destination to calculate distance, adding stops are optional.</p>
+                    </div>
                     </div>
 
                 </div>
