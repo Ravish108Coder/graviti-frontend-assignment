@@ -29,6 +29,29 @@ const mapContainerStyle = {
 // };
 
 export default function Home() {
+    const [isMobile, setIsMobile] = useState(false)
+    const mapContainerStyle = {
+        minHeight: isMobile ? '375px' : '100%',
+        width: '100%',
+        // maxHeight: '511px'
+    };
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 855);
+        };
+    
+        // Initial check
+        setIsMobile(window.innerWidth < 855);
+    
+        // Listen for window resize events
+        window.addEventListener('resize', handleResize);
+    
+        // Clean up event listener on component unmount
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [setIsMobile]); // Only include setIsMobile in the dependency array
+
     const defaultCenter = {
         lat: 28.6139,  // Latitude of New Delhi (fallback)
         lng: 77.2090   // Longitude of New Delhi (fallback)
