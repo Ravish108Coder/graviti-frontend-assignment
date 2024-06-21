@@ -144,8 +144,8 @@ export default function Home() {
                             const validDistance = (totalDistance / 1000).toFixed(2) + ' km'
                             setDistance(validDistance)
                             setTravelTime(formatDuration(totalDuration));
-                            console.log('Total calculated distance:', (totalDistance / 1000).toFixed(2) + ' km');
-                            console.log('Total calculated time:', formatDuration(totalDuration));
+                            // console.log('Total calculated distance:', (totalDistance / 1000).toFixed(2) + ' km');
+                            // console.log('Total calculated time:', formatDuration(totalDuration));
                         }
                     } else {
                         console.error(`Error fetching distance ${status}`, response);
@@ -230,10 +230,10 @@ export default function Home() {
             }
         }
 
-        console.log(waypoints)
-        waypoints.forEach(item => console.log(item.location?.formatted_address, item.location?.name))
+        // console.log(waypoints)
+        // waypoints.forEach(item => console.log(item.location?.formatted_address, item.location?.name))
         const waypointsList = waypoints.filter(waypoint => (waypoint.location !== null && waypoint.name === waypoint.location.name)) || [];
-        console.log(waypointsList)
+        // console.log(waypointsList)
         const waypointsFormatted = waypointsList.map(waypoint => ({
             location: waypoint.location.formatted_address,
             stopover: waypoint.stopover,
@@ -296,10 +296,10 @@ export default function Home() {
 
     useEffect(() => {
         if (distance === null) return;
-        console.log('scroller called');
+        // console.log('scroller called');
         // if (window.innerWidth < 768) {
         if (true) {
-            console.log('scroller called 2');
+            // console.log('scroller called 2');
 
             // Ensure the browser has finished rendering
             setTimeout(() => {
@@ -387,12 +387,12 @@ export default function Home() {
 
     const handleInfo = (str) => {
         let res = "";
-        if(String(str).split('Pass').length > 1){
+        if (String(str).split('Pass').length > 1) {
             let after = '<div class="flex items-center text-[#2b1c87] font-bold"><div class="bg-[#e5ec866b] p-2 rounded-lg w-full">' + "Pass" + String(str).split('Pass')[1].slice(0, -6) + '</div>'
-            let before = '<div class="text-[#2b1c87] bg-[#e5ec866b] font-bold mb-3 p-2 rounded-lg gap-1">' +  String(str).split('<div style')[0] + '</div>'
+            let before = '<div class="text-[#2b1c87] bg-[#e5ec866b] font-bold mb-3 p-2 rounded-lg gap-1">' + String(str).split('<div style')[0] + '</div>'
             return before.replace(/\/<wbr\/>/g, ' to ') + after;
-        }else{
-            let before =  '<div class=" text-[#2b1c87] bg-[#e5ec866b] font-bold mb-3 p-2 rounded-lg gap-1">' +  str + '</div>';
+        } else {
+            let before = '<div class=" text-[#2b1c87] bg-[#e5ec866b] font-bold mb-3 p-2 rounded-lg gap-1">' + str + '</div>';
             return before.replace(/\/<wbr\/>/g, ' to ')
         }
     }
@@ -520,14 +520,11 @@ export default function Home() {
                         />
                     )}
                     {origin && <Marker position={origin.geometry.location}
-                        onClick={() => handleMarkerClick(origin.geometry.location)}
                         icon={"https://img.icons8.com/3d-fluency/45/visit.png"} />}
                     {destination && <Marker position={destination.geometry.location}
-                        onClick={() => handleMarkerClick(destination.geometry.location)}
                         icon={"https://img.icons8.com/3d-fluency/45/order-delivered.png"} />}
                     {waypoints.map(waypoint => waypoint.location && (
                         <Marker key={waypoint.id} position={waypoint.location.geometry.location}
-                            onClick={() => handleMarkerClick(waypoint.location.geometry.location)}
                             icon={"https://img.icons8.com/3d-fluency/35/place-marker.png"} />
                     ))}
                     {selectedMarker && (
@@ -539,21 +536,32 @@ export default function Home() {
                                 <div dangerouslySetInnerHTML={{ __html: selectedMarker.info }} />
                             </div>
                         </InfoWindow>
-                        
+
                     )}
-                    {directions && directions.routes[0].legs[0].steps.map((step, idx) => {
-                        if (idx === 0 || idx === directions.routes[0].legs[0].steps.length - 1) return null;
-                        return <Marker
-                            key={`step-${idx}`}
-                            position={step.start_location}
-                            icon={"https://img.icons8.com/arcade/20/marker.png"}
-                            // label={`${String.fromCharCode(65 + idx)}`} // A, B, C, etc.
-                            onClick={() => {
-                                let str = handleInfo(String(step.instructions))
-                                handleMarkerClick({ lat: step.start_location.lat(), lng: step.start_location.lng(), info: `<div class="flex items-center justify-center mb-3"><strong class="bg-black text-white p-2 px-3 rounded-lg text-sm">Step ${idx + 1}</strong></div> ${str}` })
-                            }}
-                        />
-                    })}
+                    {directions && Object.keys(directions.routes[0].legs).map((legKey, legIndex) => (
+                        directions.routes[0].legs[legKey].steps.map((step, idx) => {
+                            // Check if this step is a waypoint
+                            const isWaypoint = step.maneuver && step.maneuver.startsWith("waypoint");
+                            // Skip if it's a waypoint
+                            if (isWaypoint) return null;
+                            return (
+                                <Marker
+                                    key={`leg-${legIndex}-step-${idx}`}
+                                    position={step.start_location}
+                                    icon={"https://img.icons8.com/arcade/20/marker.png"}
+                                    onClick={() => {
+                                        let str = handleInfo(String(step.instructions));
+                                        handleMarkerClick({
+                                            lat: step.start_location.lat(),
+                                            lng: step.start_location.lng(),
+                                            info: `<div class="flex items-center justify-center mb-3"><strong class="bg-black text-white p-2 px-3 rounded-lg text-sm">Step ${idx + 1}</strong></div> ${str}`
+                                        });
+                                    }}
+                                />
+                            );
+                        })
+                    ))}
+
                 </GoogleMap>
             </div>
         </div>

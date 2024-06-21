@@ -82,7 +82,7 @@ export default function SharedMap() {
     }, []);
 
     const calculateDistance = (origin, waypointsArray, destination) => {
-        console.log("waypointsArray", waypointsArray)
+        // console.log("waypointsArray", waypointsArray)
         const waypointsLocations = waypointsArray === undefined ? [origin, destination] : [origin, ...waypointsArray.map(w => w.location), destination];
 
         const distanceService = new window.google.maps.DistanceMatrixService();
@@ -105,15 +105,15 @@ export default function SharedMap() {
                         totalDuration += duration;
                         completedRequests += 1;
 
-                        console.log('hi')
+                        // console.log('hi')
 
                         if (completedRequests === waypointsLocations.length - 1) {
                             const validDistance = (totalDistance / 1000).toFixed(2) + ' km'
                             setDistance(validDistance);
                             setTravelTime(formatDuration(totalDuration));
                             // alert(calculateDistance)
-                            console.log('Total calculated distance:', (totalDistance / 1000).toFixed(2) + ' km');
-                            console.log('Total calculated time:', formatDuration(totalDuration));
+                            // console.log('Total calculated distance:', (totalDistance / 1000).toFixed(2) + ' km');
+                            // console.log('Total calculated time:', formatDuration(totalDuration));
                         }
                     } else {
                         console.error(`Error fetching distance ${status}`, response);
@@ -155,7 +155,7 @@ export default function SharedMap() {
 
         setWaypoints(waypointsNameList)
 
-        console.log(origin, destination, waypoints)
+        // console.log(origin, destination, waypoints)
 
         if (!origin || !destination) {
             return; // If origin or destination is not provided in the query params, exit early
