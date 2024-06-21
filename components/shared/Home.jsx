@@ -170,7 +170,15 @@ export default function Home() {
             if (place && place.formatted_address) {
                 setter(place);
                 nameSetter(place.name)
-                if (place.formatted_address !== prePlace.formatted_address) setBlur(true)
+                const currCenter = {
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng()
+                }
+                
+                if (place.formatted_address !== prePlace.formatted_address){
+                    setCenter(currCenter)
+                    setBlur(true)
+                }
             } else {
                 console.log("No place selected or invalid input");
                 setter(''); // Clear input if no valid place is selected
@@ -186,6 +194,11 @@ export default function Home() {
                 waypoints.forEach(item => {
                     if (item.id === id && item.location?.formatted_address != place.formatted_address) {
                         setBlur(true)
+                        const currCenter = {
+                            lat: place.geometry.location.lat(),
+                            lng: place.geometry.location.lng()
+                        }
+                        setCenter(currCenter)
                     }
                 })
                 const updatedWaypoints = waypoints.map(waypoint =>
