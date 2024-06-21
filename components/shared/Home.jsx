@@ -4,9 +4,10 @@ import Head from 'next/head';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleMap, DirectionsRenderer, Autocomplete, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 from uuid library
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Button } from '../ui/button';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { CirclePlus, Trash } from 'lucide-react';
 import SelectTravelMode from '@/components/shared/SelectTravelMode'
 import ShareRouteDialog from '@/components/shared/ShareRouteDialog'
@@ -29,19 +30,21 @@ const mapContainerStyle = {
 // };
 
 export default function Home() {
+    const [showSteps, setShowSteps] = useState(true)
     const [isMobile, setIsMobile] = useState(false)
     const mapContainerStyle = {
         minHeight: isMobile ? '375px' : '100%',
         width: '100%',
+        minWidth: isMobile ? '0px' : '100%'
         // maxHeight: '511px'
     };
     useEffect(() => {
         const handleResize = () => {
-            setIsMobile(window.innerWidth < 855);
+            setIsMobile(window.innerWidth < 768);
         };
 
         // Initial check
-        setIsMobile(window.innerWidth < 855);
+        setIsMobile(window.innerWidth < 768);
 
         // Listen for window resize events
         window.addEventListener('resize', handleResize);
@@ -506,63 +509,77 @@ export default function Home() {
                 </div>
 
                 {/* google map */}
-                <GoogleMap
-                    mapContainerStyle={mapContainerStyle}
-                    center={center}
-                    zoom={10}
-                    onLoad={handleLoad}
-                    options={options}
-                >
-                    {directions && (
-                        <DirectionsRenderer
-                            directions={directions}
-                            options={{ suppressMarkers: true }}
-                        />
-                    )}
-                    {origin && <Marker position={origin.geometry.location}
-                        icon={"https://img.icons8.com/3d-fluency/45/visit.png"} />}
-                    {destination && <Marker position={destination.geometry.location}
-                        icon={"https://img.icons8.com/3d-fluency/45/order-delivered.png"} />}
-                    {waypoints.map(waypoint => waypoint.location && (
-                        <Marker key={waypoint.id} position={waypoint.location.geometry.location}
-                            icon={"https://img.icons8.com/3d-fluency/35/place-marker.png"} />
-                    ))}
-                    {selectedMarker && (
-                        <InfoWindow
-                            position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
-                            onCloseClick={handleCloseClick}
-                        >
-                            <div style={{ lineHeight: '1.5em', fontSize: '14px' }}>
-                                <div dangerouslySetInnerHTML={{ __html: selectedMarker.info }} />
-                            </div>
-                        </InfoWindow>
+                <div className='min-h-[375px] w-full relative px-4 md:px-0'>
+                    <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        center={center}
+                        zoom={10}
+                        onLoad={handleLoad}
+                        options={options}
+                    >
+                        {directions && (
+                            <DirectionsRenderer
+                                directions={directions}
+                                options={{ suppressMarkers: true }}
+                            />
+                        )}
+                        {origin && <Marker position={origin.geometry.location}
+                            icon={"https://img.icons8.com/3d-fluency/45/visit.png"} />}
+                        {destination && <Marker position={destination.geometry.location}
+                            icon={"https://img.icons8.com/3d-fluency/45/order-delivered.png"} />}
+                        {waypoints.map(waypoint => waypoint.location && (
+                            <Marker key={waypoint.id} position={waypoint.location.geometry.location}
+                                icon={"https://img.icons8.com/3d-fluency/35/place-marker.png"} />
+                        ))}
+                        {selectedMarker && (
+                            <InfoWindow
+                                position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
+                                onCloseClick={handleCloseClick}
+                            >
+                                <div style={{ lineHeight: '1.5em', fontSize: '14px' }}>
+                                    <div dangerouslySetInnerHTML={{ __html: selectedMarker.info }} />
+                                </div>
+                            </InfoWindow>
 
-                    )}
-                    {directions && Object.keys(directions.routes[0].legs).map((legKey, legIndex) => (
-                        directions.routes[0].legs[legKey].steps.map((step, idx) => {
-                            // Check if this step is a waypoint
-                            const isWaypoint = step.maneuver && step.maneuver.startsWith("waypoint");
-                            // Skip if it's a waypoint
-                            if (isWaypoint) return null;
-                            return (
-                                <Marker
-                                    key={`leg-${legIndex}-step-${idx}`}
-                                    position={step.start_location}
-                                    icon={"https://img.icons8.com/arcade/20/marker.png"}
-                                    onClick={() => {
-                                        let str = handleInfo(String(step.instructions));
-                                        handleMarkerClick({
-                                            lat: step.start_location.lat(),
-                                            lng: step.start_location.lng(),
-                                            info: `<div class="flex items-center justify-center mb-3"><strong class="bg-black text-white p-2 px-3 rounded-lg text-sm">Step ${idx + 1}</strong></div> ${str}`
-                                        });
-                                    }}
-                                />
-                            );
-                        })
-                    ))}
+                        )}
+                        {directions && showSteps && Object.keys(directions.routes[0].legs).map((legKey, legIndex) => (
+                            directions.routes[0].legs[legKey].steps.map((step, idx) => {
+                                // Check if this step is a waypoint
+                                const isWaypoint = step.maneuver && step.maneuver.startsWith("waypoint");
+                                // Skip if it's a waypoint
+                                if (isWaypoint) return null;
+                                return (
+                                    <Marker
+                                        key={`leg-${legIndex}-step-${idx}`}
+                                        position={step.start_location}
+                                        icon={"https://img.icons8.com/arcade/20/marker.png"}
+                                        onClick={() => {
+                                            let str = handleInfo(String(step.instructions));
+                                            handleMarkerClick({
+                                                lat: step.start_location.lat(),
+                                                lng: step.start_location.lng(),
+                                                info: `<div class="flex items-center justify-center mb-3"><strong class="bg-black text-white p-2 px-3 rounded-lg text-sm">Step ${idx + 1}</strong></div> ${str}`
+                                            });
+                                        }}
+                                    />
+                                );
+                            })
+                        ))}
 
-                </GoogleMap>
+                    </GoogleMap>
+                    {
+                        directions &&
+                        <div className="flex items-center space-x-2 bg-white opacity-95 absolute justify-center top-2 left-[50%] transform -translate-x-1/2 p-2 shadow-md rounded-lg">
+                            <Switch id="airplane-mode" checked={showSteps}
+                                onCheckedChange={() => {
+                                    showSteps && setSelectedMarker(null)
+                                    setShowSteps(!showSteps)}
+                                    }/>
+                            <Label htmlFor="airplane-mode" className='text-sm'>Show Steps</Label>
+                        </div>
+                    }
+
+                </div>
             </div>
         </div>
     );
