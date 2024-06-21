@@ -2,7 +2,7 @@
 
 import Head from 'next/head';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { GoogleMap, DirectionsRenderer, Autocomplete, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, DirectionsRenderer, Autocomplete, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 from uuid library
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -39,13 +39,13 @@ export default function Home() {
         const handleResize = () => {
             setIsMobile(window.innerWidth < 855);
         };
-    
+
         // Initial check
         setIsMobile(window.innerWidth < 855);
-    
+
         // Listen for window resize events
         window.addEventListener('resize', handleResize);
-    
+
         // Clean up event listener on component unmount
         return () => {
             window.removeEventListener('resize', handleResize);
@@ -295,12 +295,12 @@ export default function Home() {
     };
 
     useEffect(() => {
-        if(distance === null) return;
+        if (distance === null) return;
         console.log('scroller called');
         // if (window.innerWidth < 768) {
         if (true) {
             console.log('scroller called 2');
-    
+
             // Ensure the browser has finished rendering
             setTimeout(() => {
                 window.scrollTo({
@@ -314,10 +314,88 @@ export default function Home() {
 
     const [sharableUrl, setSharableUrl] = useState('')
 
-    useEffect(()=>{
+    useEffect(() => {
         const url = generateShareableURL();
         setSharableUrl(url)
-    },[origin, destination, waypoints, travelMode])
+    }, [origin, destination, waypoints, travelMode])
+
+    const options = {
+        disableDefaultUI: true,
+        zoomControl: true,
+        // styles: [
+        //     {
+        //         featureType: 'water',
+        //         stylers: [{ color: '#0e171d' }],
+        //     },
+        //     {
+        //         featureType: 'landscape',
+        //         stylers: [{ color: '#1e303d' }],
+        //     },
+        //     {
+        //         featureType: 'road',
+        //         stylers: [{ color: '#1e303d' }],
+        //     },
+        //     {
+        //         featureType: 'poi.park',
+        //         stylers: [{ color: '#1e303d' }],
+        //     },
+        //     {
+        //         featureType: 'transit',
+        //         stylers: [{ color: '#182731' }, { visibility: 'simplified' }],
+        //     },
+        //     {
+        //         featureType: 'poi',
+        //         elementType: 'labels.icon',
+        //         stylers: [{ color: '#f0c514' }, { visibility: 'off' }],
+        //     },
+        //     {
+        //         featureType: 'poi',
+        //         elementType: 'labels.text.stroke',
+        //         stylers: [{ color: '#1e303d' }, { visibility: 'off' }],
+        //     },
+        //     {
+        //         featureType: 'transit',
+        //         elementType: 'labels.text.fill',
+        //         stylers: [{ color: '#e77e24' }, { visibility: 'off' }],
+        //     },
+        //     {
+        //         featureType: 'road',
+        //         elementType: 'labels.text.fill',
+        //         stylers: [{ color: '#94a5a6' }],
+        //     },
+        //     {
+        //         featureType: 'administrative',
+        //         elementType: 'labels',
+        //         stylers: [{ visibility: 'simplified' }, { color: '#e84c3c' }],
+        //     },
+        //     {
+        //         featureType: 'poi',
+        //         stylers: [{ color: '#e84c3c' }, { visibility: 'off' }],
+        //     },
+        // ],
+    };
+
+    const [selectedMarker, setSelectedMarker] = useState(null);
+
+    const handleMarkerClick = (marker) => {
+        setSelectedMarker(marker);
+    };
+
+    const handleCloseClick = () => {
+        setSelectedMarker(null);
+    };
+
+    const handleInfo = (str) => {
+        let res = "";
+        if(String(str).split('Pass').length > 1){
+            let after = '<div class="flex items-center text-[#2b1c87] font-bold"><div class="bg-[#e5ec866b] p-2 rounded-lg w-full">' + "Pass" + String(str).split('Pass')[1].slice(0, -6) + '</div>'
+            let before = '<div class="text-[#2b1c87] bg-[#e5ec866b] font-bold mb-3 p-2 rounded-lg gap-1">' +  String(str).split('<div style')[0] + '</div>'
+            return before.replace(/\/<wbr\/>/g, ' to ') + after;
+        }else{
+            let before =  '<div class=" text-[#2b1c87] bg-[#e5ec866b] font-bold mb-3 p-2 rounded-lg gap-1">' +  str + '</div>';
+            return before.replace(/\/<wbr\/>/g, ' to ')
+        }
+    }
 
 
     if (loadError) {
@@ -420,9 +498,9 @@ export default function Home() {
                         </div>
                     </div>
                     <div className={`${distance !== null && "hidden"} w-full flex justify-center items-center px-4 md:justify-start md:px-0`}>
-                    <div className={` w-[100%] max-w-[600px] flex items-center justify-center gap-2 bg-[#ffffff59] rounded-2xl p-4 outline outline-[2px] outline-offset-4`}>
-                        <p className='text-xl text-left text-blue-900'>Enter Valid Origin, stops and Destination to calculate distance, adding stops are optional.</p>
-                    </div>
+                        <div className={` w-[100%] max-w-[600px] flex items-center justify-center gap-2 bg-[#ffffff59] rounded-2xl p-4 outline outline-[2px] outline-offset-4`}>
+                            <p className='text-xl text-left text-blue-900'>Enter Valid Origin, stops and Destination to calculate distance, adding stops are optional.</p>
+                        </div>
                     </div>
 
                 </div>
@@ -433,12 +511,49 @@ export default function Home() {
                     center={center}
                     zoom={10}
                     onLoad={handleLoad}
+                    options={options}
                 >
                     {directions && (
                         <DirectionsRenderer
                             directions={directions}
+                            options={{ suppressMarkers: true }}
                         />
                     )}
+                    {origin && <Marker position={origin.geometry.location}
+                        onClick={() => handleMarkerClick(origin.geometry.location)}
+                        icon={"https://img.icons8.com/3d-fluency/45/visit.png"} />}
+                    {destination && <Marker position={destination.geometry.location}
+                        onClick={() => handleMarkerClick(destination.geometry.location)}
+                        icon={"https://img.icons8.com/3d-fluency/45/order-delivered.png"} />}
+                    {waypoints.map(waypoint => waypoint.location && (
+                        <Marker key={waypoint.id} position={waypoint.location.geometry.location}
+                            onClick={() => handleMarkerClick(waypoint.location.geometry.location)}
+                            icon={"https://img.icons8.com/3d-fluency/35/place-marker.png"} />
+                    ))}
+                    {selectedMarker && (
+                        <InfoWindow
+                            position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
+                            onCloseClick={handleCloseClick}
+                        >
+                            <div style={{ lineHeight: '1.5em', fontSize: '14px' }}>
+                                <div dangerouslySetInnerHTML={{ __html: selectedMarker.info }} />
+                            </div>
+                        </InfoWindow>
+                        
+                    )}
+                    {directions && directions.routes[0].legs[0].steps.map((step, idx) => {
+                        if (idx === 0 || idx === directions.routes[0].legs[0].steps.length - 1) return null;
+                        return <Marker
+                            key={`step-${idx}`}
+                            position={step.start_location}
+                            icon={"https://img.icons8.com/arcade/20/marker.png"}
+                            // label={`${String.fromCharCode(65 + idx)}`} // A, B, C, etc.
+                            onClick={() => {
+                                let str = handleInfo(String(step.instructions))
+                                handleMarkerClick({ lat: step.start_location.lat(), lng: step.start_location.lng(), info: `<div class="flex items-center justify-center mb-3"><strong class="bg-black text-white p-2 px-3 rounded-lg text-sm">Step ${idx + 1}</strong></div> ${str}` })
+                            }}
+                        />
+                    })}
                 </GoogleMap>
             </div>
         </div>
